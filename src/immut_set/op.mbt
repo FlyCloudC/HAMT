@@ -67,8 +67,22 @@ test "union" {
   let c = a.union(b)
   inspect(a.iter().count(), content="44")
   inspect(b.iter().count(), content="31")
-  inspect(a.union(b).iter().count(), content="57")
+  inspect(c.iter().count(), content="57")
   assert_true(a.iter().all(c.contains(_)))
   assert_true(b.iter().all(c.contains(_)))
   assert_true(c.iter().all(fn(k) { a.contains(k) || b.contains(k) }))
+}
+
+///|
+test "intersection" {
+  let rs = @quickcheck/splitmix.new()
+  let a : T[Int] = T::arbitrary(100, rs)
+  let b : T[Int] = T::arbitrary(100, rs)
+  let c = a.intersection(b)
+  inspect(a.iter().count(), content="44")
+  inspect(b.iter().count(), content="31")
+  inspect(c.iter().count(), content="18")
+  assert_true(a.iter().all(fn(k) { b.contains(k) == c.contains(k) }))
+  assert_true(b.iter().all(fn(k) { a.contains(k) == c.contains(k) }))
+  assert_true(c.iter().all(fn(k) { a.contains(k) && b.contains(k) }))
 }
