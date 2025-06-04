@@ -69,63 +69,52 @@ fn[A : Eq] Node::add(self : Node[A], key : A, path : Path) -> Node[A] {
 /// - path is key's path || self is Leaf
 /// - do not use self after
 fn[A : Eq] Node::add_(self : Node[A], key : A, path : Path) -> Node[A] {
-  fn go(node, path, on_replaced) {
-    match node {
-      Flat(k, path_k) =>
-        if path == path_k && key == k {
-          self
-        } else {
-          on_replaced(Branch(join_2(k, path_k, key, path)))
-        }
-      Branch(sa) => {
-        let idx = path.idx()
-        if sa.has(idx) {
-          go(sa[idx], path.next(), fn(r) {
+  let node = self
+  loop node, path, fn { x => x } {
+    Flat(k, path_k), path, on_replaced =>
+      if path == path_k && key == k {
+        self
+      } else {
+        on_replaced(Branch(join_2(k, path_k, key, path)))
+      }
+    Branch(sa), path, on_replaced => {
+      let idx = path.idx()
+      if sa.has(idx) {
+        continue sa[idx],
+          path.next(),
+          fn(r) {
             sa.replace_inplace(idx, r)
             self
-          })
-        } else {
-          on_replaced(Branch(sa.add(idx, Flat(key, path.next()))))
-        }
+          }
+      } else {
+        on_replaced(Branch(sa.add(idx, Flat(key, path.next()))))
       }
-      Leaf(k, rest_k) =>
-        if key == k || rest_k.any(key.op_equal(_)) {
-          self
-        } else {
-          on_replaced(Leaf(key, rest_k.add(k)))
-        }
     }
+    Leaf(k, rest_k), _, on_replaced =>
+      if key == k || rest_k.any(key.op_equal(_)) {
+        self
+      } else {
+        on_replaced(Leaf(key, rest_k.add(k)))
+      }
   }
-
-  go(self, path, fn { x => x })
 }
 
 ///|
 fn[A : Eq] Node::remove(self : Node[A], key : A, path : Path) -> Node[A]? {
-  fn go(node, path, on_remove : (Node[A]?) -> Node[A]?) {
-    match node {
-      Flat(k, path_k) =>
-        if path == path_k && key == k {
-          on_remove(None)
-        } else {
-          Some(self)
-        }
-      Leaf(k, rest_k) =>
-        if k == key {
-          match rest_k {
-            Empty => on_remove(None)
-            More(k2, tail~) => on_remove(Some(Leaf(k2, tail)))
-          }
-        } else if panic()(rest_k, key.op_equal(_)) is Some(index) {
-          // TODO: rest_k.find_index
-          on_remove(Some(Leaf(k, rest_k.remove_at(index))))
-        } else {
-          on_remove(None)
-        }
-      Branch(sa) => {
-        let idx = path.idx()
-        if sa.has(idx) {
-          go(sa[idx], path.next(), fn(r) {
+  let node = self
+  loop node, path, fn { x => x } {
+    Flat(k, path_k), path, on_remove =>
+      if path == path_k && key == k {
+        on_remove(None)
+      } else {
+        Some(self)
+      }
+    Branch(sa), path, on_remove => {
+      let idx = path.idx()
+      if sa.has(idx) {
+        continue sa[idx],
+          path.next(),
+          fn(r) {
             let new_sa = match r {
               None if sa.is_singleton() => return on_remove(None)
               None => sa.remove(idx)
@@ -136,15 +125,24 @@ fn[A : Eq] Node::remove(self : Node[A], key : A, path : Path) -> Node[A]? {
             } else {
               on_remove(Some(Branch(new_sa)))
             }
-          })
-        } else {
-          Some(self)
-        }
+          }
+      } else {
+        Some(self)
       }
     }
+    Leaf(k, rest_k), _, on_remove =>
+      if k == key {
+        match rest_k {
+          Empty => on_remove(None)
+          More(k2, tail~) => on_remove(Some(Leaf(k2, tail)))
+        }
+      } else if panic()(rest_k, key.op_equal(_)) is Some(index) {
+        // TODO: rest_k.find_index
+        on_remove(Some(Leaf(k, rest_k.remove_at(index))))
+      } else {
+        on_remove(None)
+      }
   }
-
-  go(self, path, fn { x => x })
 }
 
 // -----------------------------------
