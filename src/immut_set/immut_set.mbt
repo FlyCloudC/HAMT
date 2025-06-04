@@ -55,7 +55,9 @@ pub fn[A : Hash + Eq] T::from_array(arr : Array[A]) -> T[A] {
   match arr {
     [] => None
     [x, .. xs] =>
-      xs.fold(init=Flat(x, Path::of(x)), fn(acc, y) { acc.add_(y, Path::of(y)) })
+      xs.fold(init=Flat(x, Path::of(x)), fn(acc, y) {
+        acc.add_inplace(y, Path::of(y))
+      })
       |> Some
   }
 }
@@ -64,7 +66,7 @@ pub fn[A : Hash + Eq] T::from_array(arr : Array[A]) -> T[A] {
 pub fn[A : Hash + Eq] T::from_iter(iter : Iter[A]) -> T[A] {
   iter.fold(init=T::empty()._, fn {
     None, key => T::singleton(key)._
-    Some(node), key => node.add_(key, Path::of(key)) |> Some
+    Some(node), key => node.add_inplace(key, Path::of(key)) |> Some
   })
 }
 

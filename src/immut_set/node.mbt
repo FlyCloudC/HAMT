@@ -35,7 +35,6 @@ fn[A] join_2(k1 : A, p1 : Path, k2 : A, p2 : Path) -> SpArr[Node[A]] {
 ///|
 /// require:
 /// - path is key's path || self is Leaf
-/// - do not use self after
 fn[A : Eq] Node::add(self : Node[A], key : A, path : Path) -> Node[A] {
   let node = self
   loop node, path, fn { x => x } {
@@ -68,7 +67,7 @@ fn[A : Eq] Node::add(self : Node[A], key : A, path : Path) -> Node[A] {
 /// require:
 /// - path is key's path || self is Leaf
 /// - do not use self after
-fn[A : Eq] Node::add_(self : Node[A], key : A, path : Path) -> Node[A] {
+fn[A : Eq] Node::add_inplace(self : Node[A], key : A, path : Path) -> Node[A] {
   let node = self
   loop node, path, fn { x => x } {
     Flat(k, path_k), path, on_replaced =>
