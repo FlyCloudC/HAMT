@@ -1,4 +1,17 @@
 ///|
+pub fn[A] T::is_empty(self : T[A]) -> Bool {
+  self._ is None
+}
+
+///|
+/// O(n)
+pub fn[A] T::size(self : T[A]) -> Int {
+  let mut size = 0
+  self.each(fn(_) { size += 1 })
+  size
+}
+
+///|
 pub fn[A : Eq + Hash] T::contains(self : T[A], key : A) -> Bool {
   self._ is Some(node) && node.contain(key, Path::of(key))
 }
@@ -41,13 +54,28 @@ pub fn[A] T::iter(self : T[A]) -> Iter[A] {
 // -----------------------------------
 
 ///|
-pub fn[A : Hash] T::empty() -> T[A] {
+pub fn[A : Hash] T::new() -> T[A] {
   None
 }
 
 ///|
 pub fn[A : Hash] T::singleton(key : A) -> T[A] {
   Some(Flat(key, Path::of(key)))
+}
+
+///|
+pub fn[A : Hash + Eq] T::of(arr : FixedArray[A]) -> T[A] {
+  match arr {
+    [] => None
+    [x, ..] => {
+      let mut acc = Flat(x, Path::of(x))
+      for i in 1..<arr.length() {
+        let k = arr[i]
+        acc = acc.add_inplace(k, Path::of(k))
+      }
+      Some(acc)
+    }
+  }
 }
 
 ///|
@@ -64,14 +92,14 @@ pub fn[A : Hash + Eq] T::from_array(arr : Array[A]) -> T[A] {
 
 ///|
 pub fn[A : Hash + Eq] T::from_iter(iter : Iter[A]) -> T[A] {
-  iter.fold(init=T::empty()._, fn {
+  iter.fold(init=T::new()._, fn {
     None, key => T::singleton(key)._
     Some(node), key => node.add_inplace(key, Path::of(key)) |> Some
   })
 }
 
 ///|
-pub fnalias T::(empty, singleton, from_array, from_iter)
+pub fnalias T::(new, singleton, of, from_array, from_iter)
 
 // -----------------------------------
 // test
@@ -92,7 +120,7 @@ fn[A : Hash] T::depth_of(self : T[A], key : A) -> Int {
 ///|
 test {
   let n = 4
-  for a = empty().add(1254), i = 1254; a.depth_of(i) <= n; {
+  for a = new().add(1254), i = 1254; a.depth_of(i) <= n; {
     continue a.add(i + 1), i + 1
   } else {
     inspect(i, content="1309")
@@ -103,7 +131,7 @@ test {
 
 ///|
 test "add" {
-  let a = T::empty()
+  let a = T::new()
   let a = a.add(1)
   @json.inspect(a._.unwrap(), content={
     "$tag": "Flat",
@@ -171,7 +199,7 @@ test "remove" {
 ///|
 test "from_iter" {
   let iter = (1250).until(1310)
-  let a = iter.fold(init=empty(), T::add)
+  let a = iter.fold(init=new(), T::add)
   let b = from_iter(iter)
   assert_true(a == b)
 }
