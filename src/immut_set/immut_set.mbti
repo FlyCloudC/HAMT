@@ -5,11 +5,13 @@ import(
 )
 
 // Values
-fn[A : Hash] empty() -> T[A]
-
 fn[A : Hash + Eq] from_array(Array[A]) -> T[A]
 
 fn[A : Hash + Eq] from_iter(Iter[A]) -> T[A]
+
+fn[A : Hash] new() -> T[A]
+
+fn[A : Hash + Eq] of(FixedArray[A]) -> T[A]
 
 fn[A : Hash] singleton(A) -> T[A]
 
@@ -17,14 +19,18 @@ fn[A : Hash] singleton(A) -> T[A]
 type T[A]
 fn[A : Eq + Hash] T::add(Self[A], A) -> Self[A]
 fn[A : Eq + Hash] T::contains(Self[A], A) -> Bool
+fn[A : Eq] T::difference(Self[A], Self[A]) -> Self[A]
 fn[A] T::each(Self[A], (A) -> Unit) -> Unit
-fn[A : Hash] T::empty() -> Self[A]
 fn[A : Hash + Eq] T::from_array(Array[A]) -> Self[A]
 fn[A : Hash + Eq] T::from_iter(Iter[A]) -> Self[A]
 fn[A : Eq] T::intersection(Self[A], Self[A]) -> Self[A]
+fn[A] T::is_empty(Self[A]) -> Bool
 fn[A] T::iter(Self[A]) -> Iter[A]
+fn[A : Hash] T::new() -> Self[A]
+fn[A : Hash + Eq] T::of(FixedArray[A]) -> Self[A]
 fn[A : Eq + Hash] T::remove(Self[A], A) -> Self[A]
 fn[A : Hash] T::singleton(A) -> Self[A]
+fn[A] T::size(Self[A]) -> Int
 fn[A : Eq] T::union(Self[A], Self[A]) -> Self[A]
 impl[A : Eq] Eq for T[A]
 impl[A : @quickcheck.Arbitrary + Eq + Hash] @quickcheck.Arbitrary for T[A]

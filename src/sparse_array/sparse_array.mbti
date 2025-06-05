@@ -8,6 +8,7 @@ impl Eq for Bitset
 
 type T[A]
 fn[A] T::add(Self[A], Int, A) -> Self[A]
+fn[A] T::difference_by(Self[A], Self[A], (A, A) -> A?) -> Self[A]?
 fn[A] T::doubleton(Int, A, Int, A) -> Self[A]
 fn[A] T::each(Self[A], (A) -> Unit) -> Unit
 fn[A] T::first_index(Self[A]) -> Int
