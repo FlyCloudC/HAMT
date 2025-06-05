@@ -61,6 +61,19 @@ fn[K, V] join_2(
 }
 
 ///|
+fn[K : Eq, V] lookup_index(ls : List[(K, V)], key : K) -> (Int, K, V)? {
+  loop ls, 0 {
+    Empty, _ => None
+    More((k, v), tail~), index =>
+      if key == k {
+        Some((index, k, v))
+      } else {
+        continue tail, index + 1
+      }
+  }
+}
+
+///|
 /// require:
 /// - path is key's path || self is Leaf
 fn[K : Eq, V] Node::add_with(
@@ -91,11 +104,14 @@ fn[K : Eq, V] Node::add_with(
     Leaf(k, v, r), _, on_replaced =>
       if key == k {
         on_replaced(Leaf(k, new_val, r))
-      } else if panic()(r, key) is Some((index, old_val)) {
-        // FIXME: list.lookup_index
+      } else if lookup_index(r, key) is Some((index, old_key, old_val)) {
         on_replaced(
-          // Notice: replace old key with new key
-          Leaf(key, f(key, old_val, new_val), r.remove_at(index).add((k, v))),
+          // Should we keep old_key?
+          Leaf(
+            old_key,
+            f(old_key, old_val, new_val),
+            r.remove_at(index).add((k, v)),
+          ),
         )
       } else {
         self
@@ -138,14 +154,30 @@ fn[K : Eq, V] Node::add_with_inplace(
     Leaf(k, v, r), _, on_replaced =>
       if key == k {
         on_replaced(Leaf(k, new_val, r))
-      } else if panic()(r, key) is Some((index, old_val)) {
-        // FIXME: list.lookup_index
+      } else if lookup_index(r, key) is Some((index, old_key, old_val)) {
         on_replaced(
-          // Notice: replace old key with new key
-          Leaf(key, f(key, old_val, new_val), r.remove_at(index).add((k, v))),
+          // Should we keep old_key?
+          Leaf(
+            old_key,
+            f(old_key, old_val, new_val),
+            r.remove_at(index).add((k, v)),
+          ),
         )
       } else {
         self
+      }
+  }
+}
+
+///|
+fn[K : Eq, V] find_index(ls : List[(K, V)], key : K) -> Int? {
+  loop ls, 0 {
+    Empty, _ => None
+    More((k, _), tail~), index =>
+      if key == k {
+        Some(index)
+      } else {
+        continue tail, index + 1
       }
   }
 }
@@ -191,8 +223,7 @@ fn[K : Eq, V] Node::remove(
           Empty => on_remove(None)
           More((k2, v2), tail~) => on_remove(Some(Leaf(k2, v2, tail)))
         }
-      } else if panic()(r, key.op_equal(_)) is Some(index) {
-        // TODO: r.find_index
+      } else if find_index(r, key) is Some(index) {
         on_remove(Some(Leaf(k, v, r.remove_at(index))))
       } else {
         on_remove(None)

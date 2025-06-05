@@ -99,6 +99,19 @@ fn[A : Eq] Node::add_inplace(self : Node[A], key : A, path : Path) -> Node[A] {
 }
 
 ///|
+fn[K : Eq] find_index(ls : List[K], key : K) -> Int? {
+  loop ls, 0 {
+    Empty, _ => None
+    More(k, tail~), index =>
+      if key == k {
+        Some(index)
+      } else {
+        continue tail, index + 1
+      }
+  }
+}
+
+///|
 fn[A : Eq] Node::remove(self : Node[A], key : A, path : Path) -> Node[A]? {
   let node = self
   loop node, path, fn { x => x } {
@@ -135,8 +148,7 @@ fn[A : Eq] Node::remove(self : Node[A], key : A, path : Path) -> Node[A]? {
           Empty => on_remove(None)
           More(k2, tail~) => on_remove(Some(Leaf(k2, tail)))
         }
-      } else if panic()(r, key.op_equal(_)) is Some(index) {
-        // TODO: r.find_index
+      } else if find_index(r, key) is Some(index) {
         on_remove(Some(Leaf(k, r.remove_at(index))))
       } else {
         on_remove(None)
