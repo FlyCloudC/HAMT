@@ -60,14 +60,52 @@ pub fn[A : Eq] T::intersection(self : T[A], other : T[A]) -> T[A] {
 }
 
 ///|
+pub fn[A : Eq] T::difference(self : T[A], other : T[A]) -> T[A] {
+  fn go(a : Node[A], b : Node[A]) -> Node[A]? {
+    match (a, b) {
+      (node, Flat(k, path)) => node.remove(k, path)
+      (Flat(k, path) as f, node) =>
+        if node.contain(k, path) {
+          None
+        } else {
+          Some(f)
+        }
+      (Branch(asa), Branch(bsa)) =>
+        match asa.difference_by(bsa, go) {
+          None => None
+          Some(sa) if sa.is_singleton() && sa.first_value() is Flat(k, next) =>
+            Some(Flat(k, next.push(sa.first_index())))
+          Some(sa) => Some(Branch(sa))
+        }
+      (Leaf(ka, rest_ka), Leaf(kb, rest_kb)) => {
+        let la = rest_ka
+          .add(ka)
+          .filter(fn(k) { not(k == kb || rest_kb.any(k.op_equal(_))) })
+        match la {
+          Empty => None
+          More(ka, tail~) => Some(Leaf(ka, tail))
+        }
+      }
+      _ => abort("Unreachable")
+    }
+  }
+
+  match (self._, other._) {
+    (None, _) => None
+    (_, None) => self
+    (Some(a), Some(b)) => go(a, b)
+  }
+}
+
+///|
 test "union" {
   let rs = @quickcheck/splitmix.new()
-  let a : T[Int] = T::arbitrary(100, rs)
-  let b : T[Int] = T::arbitrary(100, rs)
+  let a : T[Int] = T::arbitrary(10000, rs)
+  let b : T[Int] = T::arbitrary(10000, rs)
   let c = a.union(b)
-  inspect(a.iter().count(), content="44")
-  inspect(b.iter().count(), content="31")
-  inspect(c.iter().count(), content="57")
+  inspect(a.iter().count(), content="5851")
+  inspect(b.iter().count(), content="1160")
+  inspect(c.iter().count(), content="6120")
   assert_true(a.iter().all(c.contains(_)))
   assert_true(b.iter().all(c.contains(_)))
   assert_true(c.iter().all(fn(k) { a.contains(k) || b.contains(k) }))
@@ -76,13 +114,27 @@ test "union" {
 ///|
 test "intersection" {
   let rs = @quickcheck/splitmix.new()
-  let a : T[Int] = T::arbitrary(100, rs)
-  let b : T[Int] = T::arbitrary(100, rs)
+  let a : T[Int] = T::arbitrary(10000, rs)
+  let b : T[Int] = T::arbitrary(10000, rs)
   let c = a.intersection(b)
-  inspect(a.iter().count(), content="44")
-  inspect(b.iter().count(), content="31")
-  inspect(c.iter().count(), content="18")
+  inspect(a.iter().count(), content="5851")
+  inspect(b.iter().count(), content="1160")
+  inspect(c.iter().count(), content="891")
   assert_true(a.iter().all(fn(k) { b.contains(k) == c.contains(k) }))
   assert_true(b.iter().all(fn(k) { a.contains(k) == c.contains(k) }))
   assert_true(c.iter().all(fn(k) { a.contains(k) && b.contains(k) }))
+}
+
+///|
+test "difference" {
+  let rs = @quickcheck/splitmix.new()
+  let a : T[Int] = T::arbitrary(10000, rs)
+  let b : T[Int] = T::arbitrary(10000, rs)
+  let c = a.difference(b)
+  inspect(a.iter().count(), content="5851")
+  inspect(b.iter().count(), content="1160")
+  inspect(c.iter().count(), content="4960")
+  assert_true(a.iter().all(fn(k) { b.contains(k) != c.contains(k) }))
+  assert_true(b.iter().all(fn(k) { not(c.contains(k)) }))
+  assert_true(c.iter().all(fn(k) { a.contains(k) && not(b.contains(k)) }))
 }
