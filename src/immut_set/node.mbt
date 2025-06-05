@@ -178,18 +178,3 @@ fn[A] Node::iter(self : Node[A]) -> Iter[A] {
     go(self)
   })
 }
-
-// ///|
-// fn[A, B] Node::fold_with_path(
-//   self : Node[A],
-//   path : Path,
-//   f : (B, A, Path) -> B,
-//   init~ : B
-// ) -> B {
-//   match self {
-//     Leaf(k1, rest_k) =>
-//       rest_k.fold(init=f(init, k1, path), fn(acc, k) { f(acc, k, path) })
-//     Flat(k,) => ...
-//     Branch(_) => ...
-//   }
-// }

@@ -42,9 +42,3 @@ fn Bitset::remove(self : Bitset, idx : Int) -> Bitset {
 fn Bitset::size(self : Bitset) -> Int {
   self._.popcnt()
 }
-
-// ///|
-// #locals(f)
-// fn Bitset::each(self : Bitset, f : (Int) -> Unit) -> Unit {
-
-// }
