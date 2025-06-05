@@ -22,8 +22,6 @@ fn go(b : @bench.T, size : Int) -> Unit {
   let a2 = @immut/hashset.from_array(ar).add(2).remove(3)
   let b1 = from_array(br)
   let b2 = @immut/hashset.from_array(br)
-  b.bench(name="new union", fn() { b.keep(a1.union(b1)) })
-  b.bench(name="old union", fn() { b.keep(a2.union(b2)) })
   b.bench(name="new add 2", fn() { b.keep(a1.add(2)) })
   b.bench(name="old add 2", fn() { b.keep(a2.add(2)) })
   b.bench(name="new add x", fn() { b.keep(a1.add(3)) })
@@ -36,6 +34,12 @@ fn go(b : @bench.T, size : Int) -> Unit {
   b.bench(name="old from_arr", fn() { b.keep(@immut/hashset.from_array(ar)) })
   b.bench(name="new iter", fn() { b.keep(a1.iter().count()) })
   b.bench(name="old iter", fn() { b.keep(a2.iter().count()) })
+  b.bench(name="new union", fn() { b.keep(a1.union(b1)) })
+  b.bench(name="old union", fn() { b.keep(a2.union(b2)) })
+  // b.bench(name="new intersection", fn() { b.keep(a1.intersection(b1)) })
+  // b.bench(name="old intersection", fn() { b.keep(a2.intersection(b2)) }) // not impl
+  // b.bench(name="new difference", fn() { b.keep(a1.difference(b1)) })
+  // b.bench(name="old difference", fn() { b.keep(a2.difference(b2)) }) // not impl
 }
 
 ///|
@@ -83,3 +87,22 @@ test "small" (b : @bench.T) {
 // old from_arr    0.69 µs ±   0.01 µs     0.67 µs …   0.70 µs  in 10 × 100000 runs
 // new iter        0.04 µs ±   0.00 µs     0.04 µs …   0.05 µs  in 10 × 100000 runs
 // old iter        0.12 µs ±   0.00 µs     0.12 µs …   0.13 µs  in 10 × 100000 runs
+
+///|
+test {
+  let rs = @quickcheck/splitmix.new()
+  fn f(size) {
+    let a : T[Int] = Arbitrary::arbitrary(size, rs)
+    let d = [0, 0, 0, 0, 0, 0, 0]
+    a.each(fn(x) { d[a.depth_of(x)] += 1 })
+    (a.size(), d)
+  }
+
+  inspect(f(100), content="(44, [0, 9, 33, 2, 0, 0, 0])")
+  inspect(f(1000), content="(31, [0, 17, 14, 0, 0, 0, 0])")
+  // inspect(f(10000), content="(4023, [0, 0, 71, 3474, 464, 14, 0])")
+  // inspect(f(100000), content="(28305, [0, 0, 0, 11785, 15720, 776, 24])")
+  // inspect(f(1000000), content="(322608, [0, 0, 0, 13, 237231, 82405, 2959])")
+  // inspect(f(2000000), content="(1149207, [0, 0, 0, 0, 383947, 727437, 37823])")
+  // inspect(f(4000000), content="(1513468, [0, 0, 0, 0, 357127, 1089929, 66412])")
+}
