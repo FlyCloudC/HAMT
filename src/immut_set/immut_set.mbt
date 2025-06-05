@@ -200,14 +200,14 @@ test "remove" {
 test "from_iter" {
   let iter = (1250).until(1310)
   let a = iter.fold(init=new(), T::add)
-  let b = from_iter(iter)
-  assert_true(a == b)
+  assert_true(a == from_iter(iter))
+  assert_true(a == from_array(iter.collect()))
+  assert_true(a == of(FixedArray::from_iter(iter)))
 }
 
 ///|
 test "iter" {
   let iter = (1250).until(1310)
   let a = from_iter(iter)
-  let b = from_iter(a.iter())
-  assert_true(a == b)
+  assert_true(iter.all(a.contains(_)))
 }
