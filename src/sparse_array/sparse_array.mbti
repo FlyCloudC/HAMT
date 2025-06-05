@@ -1,0 +1,31 @@
+package "FlyCloudC/hamt/sparse_array"
+
+// Values
+
+// Types and methods
+pub(all) type Bitset UInt
+impl Eq for Bitset
+
+type T[A]
+fn[A] T::add(Self[A], Int, A) -> Self[A]
+fn[A] T::doubleton(Int, A, Int, A) -> Self[A]
+fn[A] T::each(Self[A], (A) -> Unit) -> Unit
+fn[A] T::first_index(Self[A]) -> Int
+fn[A] T::first_value(Self[A]) -> A
+fn[A] T::has(Self[A], Int) -> Bool
+fn[A] T::intersection_by(Self[A], Self[A], (A, A) -> A?) -> Self[A]?
+fn[A] T::is_singleton(Self[A]) -> Bool
+fn[A] T::iter(Self[A]) -> Iter[A]
+fn[A] T::op_get(Self[A], Int) -> A
+fn[A] T::remove(Self[A], Int) -> Self[A]
+fn[A] T::replace(Self[A], Int, A) -> Self[A]
+fn[A] T::replace_inplace(Self[A], Int, A) -> Unit
+fn[A] T::singleton(Int, A) -> Self[A]
+fn[A] T::union_by(Self[A], Self[A], (A, A) -> A) -> Self[A]
+impl[A : Eq] Eq for T[A]
+impl[A : ToJson] ToJson for T[A]
+
+// Type aliases
+
+// Traits
+
