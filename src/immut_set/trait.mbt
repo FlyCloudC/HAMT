@@ -3,10 +3,10 @@ impl[A : Eq] Eq for Node[A] with op_equal(self, other) {
   match (self, other) {
     (Flat(ka, pa), Flat(kb, pb)) => pa == pb && ka == kb
     (Branch(asa), Branch(bsa)) => asa == bsa
-    (Leaf(ka, rest_ka), Leaf(kb, rest_kb)) => {
-      guard rest_ka.length() == rest_kb.length() else { return false }
-      let ia = Iter::singleton(ka) + rest_ka.iter()
-      let ib = Iter::singleton(kb) + rest_kb.iter()
+    (Leaf(ka, ra), Leaf(kb, rb)) => {
+      guard ra.length() == rb.length() else { return false }
+      let ia = Iter::singleton(ka) + ra.iter()
+      let ib = Iter::singleton(kb) + rb.iter()
       ia.all(ib.contains(_))
     }
     _ => false

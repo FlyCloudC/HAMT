@@ -4,13 +4,13 @@ pub fn[A : Eq] T::union(self : T[A], other : T[A]) -> T[A] {
     match (a, b) {
       (node, Flat(k, path)) | (Flat(k, path), node) => node.add(k, path)
       (Branch(asa), Branch(bsa)) => Branch(asa.union_by(bsa, go))
-      (Leaf(ka, rest_ka), Leaf(kb, rest_kb)) => {
-        let la = rest_ka
+      (Leaf(ka, ra), Leaf(kb, rb)) => {
+        let la = ra
           .add(ka)
-          .filter(fn(k) { not(k == kb || rest_kb.any(k.op_equal(_))) })
+          .filter(fn(k) { not(k == kb || rb.any(k.op_equal(_))) })
         match la {
           Empty => b
-          More(ka, tail~) => Leaf(ka, tail + rest_kb.add(kb))
+          More(ka, tail~) => Leaf(kb, rb + tail.add(ka))
         }
       }
       _ => abort("Unreachable")
@@ -40,10 +40,8 @@ pub fn[A : Eq] T::intersection(self : T[A], other : T[A]) -> T[A] {
             Some(Flat(k, next.push(sa.first_index())))
           Some(sa) => Some(Branch(sa))
         }
-      (Leaf(ka, rest_ka), Leaf(kb, rest_kb)) => {
-        let la = rest_ka
-          .add(ka)
-          .filter(fn(k) { k == kb || rest_kb.any(k.op_equal(_)) })
+      (Leaf(ka, ra), Leaf(kb, rb)) => {
+        let la = ra.add(ka).filter(fn(k) { k == kb || rb.any(k.op_equal(_)) })
         match la {
           Empty => None
           More(ka, tail~) => Some(Leaf(ka, tail))
@@ -77,10 +75,10 @@ pub fn[A : Eq] T::difference(self : T[A], other : T[A]) -> T[A] {
             Some(Flat(k, next.push(sa.first_index())))
           Some(sa) => Some(Branch(sa))
         }
-      (Leaf(ka, rest_ka), Leaf(kb, rest_kb)) => {
-        let la = rest_ka
+      (Leaf(ka, ra), Leaf(kb, rb)) => {
+        let la = ra
           .add(ka)
-          .filter(fn(k) { not(k == kb || rest_kb.any(k.op_equal(_))) })
+          .filter(fn(k) { not(k == kb || rb.any(k.op_equal(_))) })
         match la {
           Empty => None
           More(ka, tail~) => Some(Leaf(ka, tail))

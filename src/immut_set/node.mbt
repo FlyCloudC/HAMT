@@ -6,7 +6,7 @@ fn[A : Eq] Node::contain(self : Node[A], key : A, path : Path) -> Bool {
       let idx = path.idx()
       sa.has(idx) && sa[idx].contain(key, path.next())
     }
-    (Leaf(k1, rest), _) => key == k1 || rest.any(key.op_equal(_))
+    (Leaf(k1, r), _) => key == k1 || r.any(key.op_equal(_))
   }
 }
 
@@ -54,11 +54,11 @@ fn[A : Eq] Node::add(self : Node[A], key : A, path : Path) -> Node[A] {
         on_replaced(Branch(sa.add(idx, Flat(key, path.next()))))
       }
     }
-    Leaf(k, rest_k), _, on_replaced =>
-      if key == k || rest_k.any(key.op_equal(_)) {
+    Leaf(k, r), _, on_replaced =>
+      if key == k || r.any(key.op_equal(_)) {
         self
       } else {
-        on_replaced(Leaf(key, rest_k.add(k)))
+        on_replaced(Leaf(key, r.add(k)))
       }
   }
 }
@@ -89,11 +89,11 @@ fn[A : Eq] Node::add_inplace(self : Node[A], key : A, path : Path) -> Node[A] {
         on_replaced(Branch(sa.add(idx, Flat(key, path.next()))))
       }
     }
-    Leaf(k, rest_k), _, on_replaced =>
-      if key == k || rest_k.any(key.op_equal(_)) {
+    Leaf(k, r), _, on_replaced =>
+      if key == k || r.any(key.op_equal(_)) {
         self
       } else {
-        on_replaced(Leaf(key, rest_k.add(k)))
+        on_replaced(Leaf(key, r.add(k)))
       }
   }
 }
@@ -129,15 +129,15 @@ fn[A : Eq] Node::remove(self : Node[A], key : A, path : Path) -> Node[A]? {
         Some(self)
       }
     }
-    Leaf(k, rest_k), _, on_remove =>
+    Leaf(k, r), _, on_remove =>
       if k == key {
-        match rest_k {
+        match r {
           Empty => on_remove(None)
           More(k2, tail~) => on_remove(Some(Leaf(k2, tail)))
         }
-      } else if panic()(rest_k, key.op_equal(_)) is Some(index) {
-        // TODO: rest_k.find_index
-        on_remove(Some(Leaf(k, rest_k.remove_at(index))))
+      } else if panic()(r, key.op_equal(_)) is Some(index) {
+        // TODO: r.find_index
+        on_remove(Some(Leaf(k, r.remove_at(index))))
       } else {
         on_remove(None)
       }
@@ -151,9 +151,9 @@ fn[A : Eq] Node::remove(self : Node[A], key : A, path : Path) -> Node[A]? {
 fn[A] Node::each(self : Node[A], f : (A) -> Unit) -> Unit {
   match self {
     Flat(k, _) => f(k)
-    Leaf(k, rest_k) => {
+    Leaf(k, r) => {
       f(k)
-      rest_k.each(f)
+      r.each(f)
     }
     Branch(sa) => sa.each(_.each(f))
   }
@@ -164,8 +164,8 @@ fn[A] Node::iter(self : Node[A]) -> Iter[A] {
   Iter::new(fn(yield_) {
     fn go {
       Flat(k, _) => yield_(k)
-      Leaf(k, rest_k) =>
-        loop k, rest_k {
+      Leaf(k, r) =>
+        loop k, r {
           k, Empty => yield_(k)
           k, More(k2, tail~) => {
             guard yield_(k) is IterContinue else { return IterEnd }
