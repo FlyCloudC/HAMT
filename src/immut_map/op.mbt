@@ -4,7 +4,20 @@ fn[K : Eq, V] union_list_with(
   lb : List[(K, V)],
   f : (K, V, V) -> V
 ) -> List[(K, V)] {
-  panic()(la, lb, f) // TODO
+  let la = la.to_array()
+  let lb = lb.to_array()
+  for i in 0..<la.length() {
+    let (ka, va) = la[i]
+    for j in 0..<lb.length() {
+      let (kb, vb) = lb[j]
+      if ka == kb {
+        la[i] = (ka, f(ka, va, vb))
+        lb.remove(j) |> ignore
+        break
+      }
+    }
+  }
+  @list.from_iter(la.iter() + lb.iter())
 }
 
 ///|
@@ -40,7 +53,24 @@ fn[K : Eq, V] intersection_list_with(
   lb : List[(K, V)],
   f : (K, V, V) -> V
 ) -> List[(K, V)] {
-  panic()(la, lb, f) // TODO
+  let la = la.to_array()
+  let lb = lb.to_array()
+  for i = 0; i < la.length(); {
+    let (ka, va) = la[i]
+    for j in 0..<lb.length() {
+      let (kb, vb) = lb[j]
+      if ka == kb {
+        la[i] = (ka, f(ka, va, vb))
+        lb.remove(j) |> ignore
+        break
+      }
+    } else {
+      la.remove(i) |> ignore
+      continue i
+    }
+    continue i + 1
+  }
+  @list.from_array(la)
 }
 
 ///|
