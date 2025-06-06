@@ -103,7 +103,7 @@ fn[K : Eq, V] Node::add_with(
     }
     Leaf(k, v, r), _, on_replaced =>
       if key == k {
-        on_replaced(Leaf(k, new_val, r))
+        on_replaced(Leaf(k, f(k, v, new_val), r))
       } else if lookup_index(r, key) is Some((index, old_key, old_val)) {
         on_replaced(
           // Should we keep old_key?
@@ -153,7 +153,7 @@ fn[K : Eq, V] Node::add_with_inplace(
     }
     Leaf(k, v, r), _, on_replaced =>
       if key == k {
-        on_replaced(Leaf(k, new_val, r))
+        on_replaced(Leaf(k, f(k, v, new_val), r))
       } else if lookup_index(r, key) is Some((index, old_key, old_val)) {
         on_replaced(
           // Should we keep old_key?
