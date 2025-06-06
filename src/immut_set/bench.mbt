@@ -105,4 +105,15 @@ test {
   // inspect(f(1000000), content="(322608, [0, 0, 0, 13, 237231, 82405, 2959])")
   // inspect(f(2000000), content="(1149207, [0, 0, 0, 0, 383947, 727437, 37823])")
   // inspect(f(4000000), content="(1513468, [0, 0, 0, 0, 357127, 1089929, 66412])")
+
+  fn g(size) {
+    let a : T[MyInt] = from_iter((0).until(size).map(MyInt(_)))
+    let d = [0, 0, 0, 0, 0, 0, 0]
+    a.each(fn(x) { d[a.depth_of(x)] += 1 })
+    (a.size(), d)
+  }
+
+  inspect(g(100), content="(100, [0, 5, 89, 6, 0, 0, 0])")
+  inspect(g(300), content="(300, [0, 0, 168, 44, 0, 0, 88])")
+  inspect(g(500), content="(500, [0, 0, 10, 2, 0, 0, 488])")
 }
