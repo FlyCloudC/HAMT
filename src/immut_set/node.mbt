@@ -151,7 +151,7 @@ fn[A : Eq] Node::remove(self : Node[A], key : A, path : Path) -> Node[A]? {
       } else if find_index(r, key) is Some(index) {
         on_remove(Some(Leaf(k, r.remove_at(index))))
       } else {
-        on_remove(None)
+        Some(self)
       }
   }
 }

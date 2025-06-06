@@ -114,7 +114,7 @@ fn[K : Eq, V] Node::add_with(
           ),
         )
       } else {
-        self
+        on_replaced(Leaf(key, new_val, r.add((k, v))))
       }
   }
 }
@@ -164,7 +164,7 @@ fn[K : Eq, V] Node::add_with_inplace(
           ),
         )
       } else {
-        self
+        on_replaced(Leaf(key, new_val, r.add((k, v))))
       }
   }
 }
@@ -226,7 +226,7 @@ fn[K : Eq, V] Node::remove(
       } else if find_index(r, key) is Some(index) {
         on_remove(Some(Leaf(k, v, r.remove_at(index))))
       } else {
-        on_remove(None)
+        Some(self)
       }
   }
 }
