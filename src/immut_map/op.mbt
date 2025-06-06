@@ -135,11 +135,11 @@ pub fn[K : Eq, V] T::difference(self : T[K, V], other : T[K, V]) -> T[K, V] {
         let la = ra
           .add((ka, va))
           .filter(fn {
-            (k, _) => not(k == kb || rb.any(fn { (x, _) => x == k }))
+            (k, _) => not(k == kb || rb.any(fn { (rkb, _) => k == rkb }))
           })
         match la {
           Empty => None
-          More((ka, kb), tail~) => Some(Leaf(ka, kb, tail))
+          More((k, v), tail~) => Some(Leaf(k, v, tail))
         }
       }
       _ => abort("Unreachable")
@@ -154,15 +154,22 @@ pub fn[K : Eq, V] T::difference(self : T[K, V], other : T[K, V]) -> T[K, V] {
 }
 
 ///|
+priv type MyInt Int derive(Eq)
+
+///|
+impl Hash for MyInt with hash_combine(self, hasher) {
+  (self._ & 0xff).hash_combine(hasher)
+}
+
+///|
 test "union" {
-  let rs = @quickcheck/splitmix.new()
-  let a : T[Int, Int] = T::arbitrary(10000, rs)
-  let b : T[Int, Int] = T::arbitrary(10000, rs)
-  let f = fn { k, va, vb => k + va - vb }
+  let m = fn { x => (MyInt(x), x) }
+  let a = from_iter((0).until(300).map(m))
+  let b = from_iter((-200).until(100).map(m))
+  inspect(a.depth_of(1), content="6")
+  inspect(b.depth_of(1), content="2")
+  let f = fn { MyInt(k), va, vb => k + va - vb }
   let c = a.union_with(b, f)
-  inspect(a.iter().count(), content="5848")
-  inspect(b.iter().count(), content="3084")
-  inspect(c.iter().count(), content="6946")
   assert_true(a.iter().all(fn { (k, _) => c.contains(k) }))
   assert_true(b.iter().all(fn { (k, _) => c.contains(k) }))
   assert_true(
@@ -181,14 +188,11 @@ test "union" {
 
 ///|
 test "intersection" {
-  let rs = @quickcheck/splitmix.new()
-  let a : T[Int, Int] = T::arbitrary(10000, rs)
-  let b : T[Int, Int] = T::arbitrary(10000, rs)
-  let f = fn { k, va, vb => k + va - vb }
+  let m = fn { x => (MyInt(x), x) }
+  let a = from_iter((0).until(300).map(m))
+  let b = from_iter((-200).until(100).map(m))
+  let f = fn { MyInt(k), va, vb => k + va - vb }
   let c = a.intersection_with(b, f)
-  inspect(a.iter().count(), content="5848")
-  inspect(b.iter().count(), content="3084")
-  inspect(c.iter().count(), content="1986")
   assert_true(a.iter().all(fn { (k, _) => b.contains(k) == c.contains(k) }))
   assert_true(b.iter().all(fn { (k, _) => a.contains(k) == c.contains(k) }))
   assert_true(
@@ -203,13 +207,10 @@ test "intersection" {
 
 ///|
 test "difference" {
-  let rs = @quickcheck/splitmix.new()
-  let a : T[Int, Int] = T::arbitrary(10000, rs)
-  let b : T[Int, Int] = T::arbitrary(10000, rs)
+  let m = fn { x => (MyInt(x), x) }
+  let a = from_iter((0).until(300).map(m))
+  let b = from_iter((-200).until(100).map(m))
   let c = a.difference(b)
-  inspect(a.iter().count(), content="5848")
-  inspect(b.iter().count(), content="3084")
-  inspect(c.iter().count(), content="3862")
   assert_true(a.iter().all(fn { (k, _) => b.contains(k) != c.contains(k) }))
   assert_true(b.iter().all(fn { (k, _) => not(c.contains(k)) }))
   assert_true(

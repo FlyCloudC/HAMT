@@ -96,14 +96,19 @@ pub fn[A : Eq] T::difference(self : T[A], other : T[A]) -> T[A] {
 }
 
 ///|
+priv type MyInt Int derive(Eq)
+
+///|
+impl Hash for MyInt with hash_combine(self, hasher) {
+  (self._ & 0xff).hash_combine(hasher)
+}
+
+///|
 test "union" {
-  let rs = @quickcheck/splitmix.new()
-  let a : T[Int] = T::arbitrary(10000, rs)
-  let b : T[Int] = T::arbitrary(10000, rs)
+  let a = from_iter((0).until(300).map(MyInt(_)))
+  let b = from_iter((-200).until(100).map(MyInt(_)))
+  inspect(a.depth_of(1), content="6")
   let c = a.union(b)
-  inspect(a.iter().count(), content="5851")
-  inspect(b.iter().count(), content="1160")
-  inspect(c.iter().count(), content="6120")
   assert_true(a.iter().all(c.contains(_)))
   assert_true(b.iter().all(c.contains(_)))
   assert_true(c.iter().all(fn(k) { a.contains(k) || b.contains(k) }))
@@ -111,13 +116,9 @@ test "union" {
 
 ///|
 test "intersection" {
-  let rs = @quickcheck/splitmix.new()
-  let a : T[Int] = T::arbitrary(10000, rs)
-  let b : T[Int] = T::arbitrary(10000, rs)
+  let a = from_iter((0).until(300).map(MyInt(_)))
+  let b = from_iter((-200).until(100).map(MyInt(_)))
   let c = a.intersection(b)
-  inspect(a.iter().count(), content="5851")
-  inspect(b.iter().count(), content="1160")
-  inspect(c.iter().count(), content="891")
   assert_true(a.iter().all(fn(k) { b.contains(k) == c.contains(k) }))
   assert_true(b.iter().all(fn(k) { a.contains(k) == c.contains(k) }))
   assert_true(c.iter().all(fn(k) { a.contains(k) && b.contains(k) }))
@@ -125,13 +126,9 @@ test "intersection" {
 
 ///|
 test "difference" {
-  let rs = @quickcheck/splitmix.new()
-  let a : T[Int] = T::arbitrary(10000, rs)
-  let b : T[Int] = T::arbitrary(10000, rs)
+  let a = from_iter((0).until(300).map(MyInt(_)))
+  let b = from_iter((-200).until(100).map(MyInt(_)))
   let c = a.difference(b)
-  inspect(a.iter().count(), content="5851")
-  inspect(b.iter().count(), content="1160")
-  inspect(c.iter().count(), content="4960")
   assert_true(a.iter().all(fn(k) { b.contains(k) != c.contains(k) }))
   assert_true(b.iter().all(fn(k) { not(c.contains(k)) }))
   assert_true(c.iter().all(fn(k) { a.contains(k) && not(b.contains(k)) }))
